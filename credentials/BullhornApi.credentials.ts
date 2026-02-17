@@ -1,0 +1,120 @@
+import { ICredentialType, INodeProperties } from 'n8n-workflow';
+
+export class BullhornApi implements ICredentialType {
+	name = 'bullhornApi';
+	displayName = 'Bullhorn API';
+	documentationUrl = 'https://bullhorn.github.io/rest-api-docs/';
+
+	properties: INodeProperties[] = [
+		{
+			displayName: 'Client ID',
+			name: 'clientId',
+			type: 'string',
+			default: '',
+			required: true,
+			description: 'OAuth Client ID from Bullhorn',
+		},
+		{
+			displayName: 'Client Secret',
+			name: 'clientSecret',
+			type: 'string',
+			typeOptions: { password: true },
+			default: '',
+			required: true,
+			description: 'OAuth Client Secret from Bullhorn',
+		},
+		{
+			displayName: 'API Username',
+			name: 'username',
+			type: 'string',
+			default: '',
+			required: true,
+			description: 'Bullhorn API username',
+		},
+		{
+			displayName: 'Password',
+			name: 'password',
+			type: 'string',
+			typeOptions: { password: true },
+			default: '',
+			required: true,
+			description: 'Bullhorn API password',
+		},
+		{
+			displayName: 'Data Center',
+			name: 'dataCenter',
+			type: 'options',
+			options: [
+				{ name: 'Auto-Detect (via loginInfo)', value: 'auto' },
+				{ name: 'CLS1', value: 'cls1' },
+				{ name: 'CLS2', value: 'cls2' },
+				{ name: 'CLS3', value: 'cls3' },
+				{ name: 'CLS4', value: 'cls4' },
+				{ name: 'CLS5', value: 'cls5' },
+				{ name: 'CLS6', value: 'cls6' },
+				{ name: 'CLS7', value: 'cls7' },
+				{ name: 'CLS8', value: 'cls8' },
+				{ name: 'CLS9', value: 'cls9' },
+				{ name: 'CLS21', value: 'cls21' },
+				{ name: 'CLS22', value: 'cls22' },
+				{ name: 'CLS30', value: 'cls30' },
+				{ name: 'CLS31', value: 'cls31' },
+				{ name: 'CLS32', value: 'cls32' },
+				{ name: 'CLS33', value: 'cls33' },
+				{ name: 'CLS34', value: 'cls34' },
+				{ name: 'CLS35', value: 'cls35' },
+				{ name: 'CLS36', value: 'cls36' },
+				{ name: 'CLS40', value: 'cls40' },
+				{ name: 'CLS41', value: 'cls41' },
+				{ name: 'CLS42', value: 'cls42' },
+				{ name: 'CLS50', value: 'cls50' },
+				{ name: 'CLS51', value: 'cls51' },
+				{ name: 'CLS60', value: 'cls60' },
+				{ name: 'CLS61', value: 'cls61' },
+				{ name: 'CLS62', value: 'cls62' },
+				{ name: 'CLS63', value: 'cls63' },
+				{ name: 'CLS66', value: 'cls66' },
+				{ name: 'CLS67', value: 'cls67' },
+				{ name: 'CLS68', value: 'cls68' },
+				{ name: 'CLS69', value: 'cls69' },
+				{ name: 'CLS70', value: 'cls70' },
+				{ name: 'CLS71', value: 'cls71' },
+				{ name: 'CLS80', value: 'cls80' },
+				{ name: 'CLS81', value: 'cls81' },
+				{ name: 'CLS90', value: 'cls90' },
+				{ name: 'CLS91', value: 'cls91' },
+				{ name: 'CLS99', value: 'cls99' },
+				{ name: 'Custom', value: 'custom' },
+			],
+			default: 'auto',
+			description:
+				'Bullhorn data center. Use Auto-Detect to query loginInfo, or select a specific cluster.',
+		},
+		{
+			displayName: 'Custom Auth URL',
+			name: 'customAuthUrl',
+			type: 'string',
+			default: '',
+			displayOptions: {
+				show: {
+					dataCenter: ['custom'],
+				},
+			},
+			placeholder: 'https://auth-emea9.bullhornstaffing.com',
+			description: 'Custom OAuth base URL',
+		},
+		{
+			displayName: 'Custom REST Login URL',
+			name: 'customRestLoginUrl',
+			type: 'string',
+			default: '',
+			displayOptions: {
+				show: {
+					dataCenter: ['custom'],
+				},
+			},
+			placeholder: 'https://rest-emea9.bullhornstaffing.com',
+			description: 'Custom REST login base URL',
+		},
+	];
+}

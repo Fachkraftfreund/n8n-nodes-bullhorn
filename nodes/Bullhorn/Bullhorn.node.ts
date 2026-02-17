@@ -1,0 +1,284 @@
+import {
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+	IDataObject,
+	NodeOperationError,
+} from 'n8n-workflow';
+
+import { bullhornApiRequest, bullhornApiRequestAllItems } from './GenericFunctions';
+
+import { candidateOperations, candidateFields } from './descriptions/CandidateDescription';
+import { jobOrderOperations, jobOrderFields } from './descriptions/JobOrderDescription';
+import { jobSubmissionOperations, jobSubmissionFields } from './descriptions/JobSubmissionDescription';
+import { placementOperations, placementFields } from './descriptions/PlacementDescription';
+import { clientContactOperations, clientContactFields } from './descriptions/ClientContactDescription';
+import { clientCorporationOperations, clientCorporationFields } from './descriptions/ClientCorporationDescription';
+import { noteOperations, noteFields } from './descriptions/NoteDescription';
+import { leadOperations, leadFields } from './descriptions/LeadDescription';
+import { opportunityOperations, opportunityFields } from './descriptions/OpportunityDescription';
+import { appointmentOperations, appointmentFields } from './descriptions/AppointmentDescription';
+import { taskOperations, taskFields } from './descriptions/TaskDescription';
+
+// Map of n8n resource names → Bullhorn PascalCase entity names
+const ENTITY_MAP: Record<string, string> = {
+	candidate: 'Candidate',
+	jobOrder: 'JobOrder',
+	jobSubmission: 'JobSubmission',
+	placement: 'Placement',
+	clientContact: 'ClientContact',
+	clientCorporation: 'ClientCorporation',
+	note: 'Note',
+	lead: 'Lead',
+	opportunity: 'Opportunity',
+	appointment: 'Appointment',
+	task: 'Task',
+};
+
+// Required fields per resource for the Create operation.
+// These are the field names as they appear in the n8n parameter definitions.
+const REQUIRED_CREATE_FIELDS: Record<string, string[]> = {
+	candidate: ['firstName', 'lastName', 'name', 'status'],
+	jobOrder: ['title', 'clientCorporation', 'status'],
+	jobSubmission: ['candidate', 'jobOrder', 'status'],
+	placement: ['candidate', 'jobOrder', 'status', 'dateBegin', 'payRate', 'clientBillRate'],
+	clientContact: ['firstName', 'lastName', 'clientCorporation', 'name', 'status'],
+	clientCorporation: ['name', 'status'],
+	note: ['action', 'comments'],
+	lead: ['firstName', 'lastName', 'name'],
+	opportunity: ['title', 'clientCorporation', 'status'],
+	appointment: ['subject', 'dateBegin', 'dateEnd'],
+	task: ['subject'],
+};
+
+// Fields that reference other entities and must be sent as { id: value }
+const ENTITY_REF_FIELDS = new Set([
+	'clientCorporation', 'candidate', 'jobOrder', 'jobSubmission',
+	'owner', 'sendingUser', 'personReference', 'candidateReference', 'category',
+]);
+
+/**
+ * Wrap an ID value as a Bullhorn entity reference: { id: <number> }
+ */
+function toEntityRef(value: unknown): IDataObject {
+	if (typeof value === 'number' && value > 0) {
+		return { id: value };
+	}
+	return value as IDataObject;
+}
+
+/**
+ * Build request body from required fields + additionalFields + customFields.
+ */
+function buildBody(
+	context: IExecuteFunctions,
+	resource: string,
+	index: number,
+	includeRequired: boolean,
+): IDataObject {
+	const body: IDataObject = {};
+
+	// Collect required fields for create
+	if (includeRequired) {
+		const requiredFields = REQUIRED_CREATE_FIELDS[resource] || [];
+		for (const field of requiredFields) {
+			const value = context.getNodeParameter(field, index);
+			if (ENTITY_REF_FIELDS.has(field)) {
+				body[field] = toEntityRef(value);
+			} else {
+				body[field] = value as IDataObject;
+			}
+		}
+	}
+
+	// Collect additional fields
+	const additionalFields = context.getNodeParameter('additionalFields', index, {}) as IDataObject;
+	let customFieldsRaw: string | undefined;
+
+	for (const [key, value] of Object.entries(additionalFields)) {
+		if (key === 'customFields') {
+			customFieldsRaw = value as string;
+			continue;
+		}
+		if (value === '' || value === 0 || value === undefined || value === null) continue;
+
+		if (ENTITY_REF_FIELDS.has(key)) {
+			body[key] = toEntityRef(value);
+		} else {
+			body[key] = value as IDataObject;
+		}
+	}
+
+	// Merge custom fields JSON
+	if (customFieldsRaw && customFieldsRaw !== '{}') {
+		try {
+			const custom = JSON.parse(customFieldsRaw) as IDataObject;
+			Object.assign(body, custom);
+		} catch {
+			// Ignore malformed JSON — will be caught at runtime
+		}
+	}
+
+	return body;
+}
+
+export class Bullhorn implements INodeType {
+	description: INodeTypeDescription = {
+		displayName: 'Bullhorn',
+		name: 'bullhorn',
+		icon: 'file:bullhorn.svg',
+		group: ['transform'],
+		version: 1,
+		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
+		description: 'Interact with Bullhorn CRM API',
+		defaults: { name: 'Bullhorn' },
+		inputs: ['main'],
+		outputs: ['main'],
+		credentials: [
+			{
+				name: 'bullhornApi',
+				required: true,
+			},
+		],
+		properties: [
+			{
+				displayName: 'Resource',
+				name: 'resource',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{ name: 'Appointment', value: 'appointment' },
+					{ name: 'Candidate', value: 'candidate' },
+					{ name: 'Client Contact', value: 'clientContact' },
+					{ name: 'Client Corporation', value: 'clientCorporation' },
+					{ name: 'Job Order', value: 'jobOrder' },
+					{ name: 'Job Submission', value: 'jobSubmission' },
+					{ name: 'Lead', value: 'lead' },
+					{ name: 'Note', value: 'note' },
+					{ name: 'Opportunity', value: 'opportunity' },
+					{ name: 'Placement', value: 'placement' },
+					{ name: 'Task', value: 'task' },
+				],
+				default: 'candidate',
+			},
+			// Operations & fields for each resource
+			...candidateOperations, ...candidateFields,
+			...jobOrderOperations, ...jobOrderFields,
+			...jobSubmissionOperations, ...jobSubmissionFields,
+			...placementOperations, ...placementFields,
+			...clientContactOperations, ...clientContactFields,
+			...clientCorporationOperations, ...clientCorporationFields,
+			...noteOperations, ...noteFields,
+			...leadOperations, ...leadFields,
+			...opportunityOperations, ...opportunityFields,
+			...appointmentOperations, ...appointmentFields,
+			...taskOperations, ...taskFields,
+		],
+	};
+
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		const items = this.getInputData();
+		const returnData: INodeExecutionData[] = [];
+
+		const resource = this.getNodeParameter('resource', 0) as string;
+		const operation = this.getNodeParameter('operation', 0) as string;
+
+		const entityName = ENTITY_MAP[resource];
+		if (!entityName) {
+			throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`);
+		}
+
+		for (let i = 0; i < items.length; i++) {
+			try {
+				// ---- CREATE ----
+				if (operation === 'create') {
+					const body = buildBody(this, resource, i, true);
+					// Bullhorn uses PUT for entity creation
+					const response = await bullhornApiRequest.call(
+						this, 'PUT', `entity/${entityName}`, body,
+					);
+					returnData.push({ json: response, pairedItem: { item: i } });
+
+				// ---- GET ----
+				} else if (operation === 'get') {
+					const entityId = this.getNodeParameter('entityId', i) as number;
+					const fields = this.getNodeParameter('fields', i, 'id') as string;
+					const response = await bullhornApiRequest.call(
+						this, 'GET', `entity/${entityName}/${entityId}`, undefined, { fields },
+					);
+					// Bullhorn wraps entity in { data: { ... } }
+					const data = (response.data as IDataObject) || response;
+					returnData.push({ json: data, pairedItem: { item: i } });
+
+				// ---- UPDATE ----
+				} else if (operation === 'update') {
+					const entityId = this.getNodeParameter('entityId', i) as number;
+					const body = buildBody(this, resource, i, false);
+					// Bullhorn uses POST for entity update
+					const response = await bullhornApiRequest.call(
+						this, 'POST', `entity/${entityName}/${entityId}`, body,
+					);
+					returnData.push({ json: response, pairedItem: { item: i } });
+
+				// ---- DELETE (soft-delete) ----
+				} else if (operation === 'delete') {
+					const entityId = this.getNodeParameter('entityId', i) as number;
+					// Bullhorn soft-deletes via POST with isDeleted: true
+					const response = await bullhornApiRequest.call(
+						this, 'POST', `entity/${entityName}/${entityId}`, { isDeleted: true },
+					);
+					returnData.push({ json: response, pairedItem: { item: i } });
+
+				// ---- GET ALL (search / query) ----
+				} else if (operation === 'getAll') {
+					const searchType = this.getNodeParameter('searchType', i) as string;
+					const queryString = this.getNodeParameter('queryString', i) as string;
+					const fields = this.getNodeParameter('fields', i, 'id') as string;
+					const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+
+					let endpoint: string;
+					const qs: IDataObject = { fields };
+
+					if (searchType === 'search') {
+						endpoint = `search/${entityName}`;
+						qs.query = queryString;
+					} else {
+						endpoint = `query/${entityName}`;
+						qs.where = queryString;
+					}
+
+					if (returnAll) {
+						const data = await bullhornApiRequestAllItems.call(
+							this, 'GET', endpoint, undefined, qs,
+						);
+						returnData.push(
+							...data.map((item) => ({ json: item, pairedItem: { item: i } })),
+						);
+					} else {
+						const limit = this.getNodeParameter('limit', i, 50) as number;
+						qs.count = limit;
+						const response = await bullhornApiRequest.call(
+							this, 'GET', endpoint, undefined, qs,
+						);
+						const data = (response.data as IDataObject[]) || [];
+						returnData.push(
+							...data.map((item) => ({ json: item, pairedItem: { item: i } })),
+						);
+					}
+				}
+			} catch (error) {
+				if (this.continueOnFail()) {
+					returnData.push({
+						json: { error: (error as Error).message },
+						pairedItem: { item: i },
+					});
+					continue;
+				}
+				throw error;
+			}
+		}
+
+		return [returnData];
+	}
+}

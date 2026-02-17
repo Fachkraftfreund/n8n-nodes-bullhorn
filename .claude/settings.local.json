@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.n8n.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:bullhorn.github.io)",
+      "WebFetch(domain:supportforums.bullhorn.com)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc)",
+      "Bash(npx gulp build:icons)"
+    ]
+  }
+}
