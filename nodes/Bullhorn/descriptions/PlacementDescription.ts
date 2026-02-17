@@ -108,21 +108,18 @@ export const placementFields: INodeProperties[] = [
 	{
 		displayName: 'Search Type',
 		name: 'searchType',
-		type: 'options',
+		type: 'hidden',
 		displayOptions: { show: { resource: ['placement'], operation: ['getAll'] } },
-		options: [
-			{ name: 'Query (SQL-like WHERE)', value: 'query' },
-			{ name: 'Search (Lucene)', value: 'search' },
-		],
-		default: 'query',
+		default: 'search',
 	},
 	{
-		displayName: 'Query / Search String',
+		displayName: 'Search Query (Lucene)',
 		name: 'queryString',
 		type: 'string',
 		required: true,
 		displayOptions: { show: { resource: ['placement'], operation: ['getAll'] } },
-		default: '',
+		default: 'isDeleted:false',
+		description: 'Lucene query syntax (e.g. "status:Placed")',
 	},
 	{
 		displayName: 'Return All',

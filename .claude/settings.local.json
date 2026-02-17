@@ -8,7 +8,8 @@
       "WebFetch(domain:supportforums.bullhorn.com)",
       "Bash(npm install:*)",
       "Bash(npx tsc)",
-      "Bash(npx gulp build:icons)"
+      "Bash(npx gulp build:icons)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

@@ -100,6 +100,18 @@ export class BullhornTrigger implements INodeType {
 
 		if (needsSubscription) {
 			try {
+				// Delete existing subscription first (ignoring errors if it doesn't exist)
+				try {
+					await bullhornApiRequest.call(
+						this,
+						'DELETE',
+						`event/subscription/${subscriptionId}`,
+					);
+				} catch {
+					// Subscription may not exist — that's fine
+				}
+
+				// Create new subscription
 				await bullhornApiRequest.call(
 					this,
 					'PUT',

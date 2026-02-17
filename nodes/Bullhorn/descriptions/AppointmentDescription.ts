@@ -84,13 +84,9 @@ export const appointmentFields: INodeProperties[] = [
 	{
 		displayName: 'Search Type',
 		name: 'searchType',
-		type: 'options',
+		type: 'hidden',
 		displayOptions: { show: { resource: ['appointment'], operation: ['getAll'] } },
-		options: [
-			{ name: 'Query (SQL-like WHERE)', value: 'query' },
-		],
 		default: 'query',
-		description: 'Appointments only support Query (not Lucene Search)',
 	},
 	{
 		displayName: 'Query String',

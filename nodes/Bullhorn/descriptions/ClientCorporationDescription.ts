@@ -81,21 +81,18 @@ export const clientCorporationFields: INodeProperties[] = [
 	{
 		displayName: 'Search Type',
 		name: 'searchType',
-		type: 'options',
+		type: 'hidden',
 		displayOptions: { show: { resource: ['clientCorporation'], operation: ['getAll'] } },
-		options: [
-			{ name: 'Query (SQL-like WHERE)', value: 'query' },
-			{ name: 'Search (Lucene)', value: 'search' },
-		],
-		default: 'query',
+		default: 'search',
 	},
 	{
-		displayName: 'Query / Search String',
+		displayName: 'Search Query (Lucene)',
 		name: 'queryString',
 		type: 'string',
 		required: true,
 		displayOptions: { show: { resource: ['clientCorporation'], operation: ['getAll'] } },
-		default: '',
+		default: 'isDeleted:false',
+		description: 'Lucene query syntax (e.g. "name:Acme")',
 	},
 	{
 		displayName: 'Return All',

@@ -73,10 +73,14 @@ async function getDataCenterUrls(
 			);
 		}
 
-		// oauthUrl looks like "https://auth-cls99.bullhornstaffing.com/oauth/authorize"
-		// restUrl looks like "https://rest99.bullhornstaffing.com/rest-services/"
-		const authBaseUrl = oauthUrl.replace(/\/oauth\/authorize.*$/, '');
-		const restLoginBaseUrl = restUrl.replace(/\/rest-services\/.*$/, '');
+		// oauthUrl can be:
+		//   "https://auth-ger.bullhornstaffing.com/oauth"
+		//   "https://auth-cls99.bullhornstaffing.com/oauth/authorize"
+		// restUrl can be:
+		//   "https://rest-ger.bullhornstaffing.com/rest-services"
+		//   "https://rest99.bullhornstaffing.com/rest-services/"
+		const authBaseUrl = oauthUrl.replace(/\/oauth(\/authorize)?.*$/, '');
+		const restLoginBaseUrl = restUrl.replace(/\/rest-services\/?.*$/, '');
 
 		return { authBaseUrl, restLoginBaseUrl };
 	}
