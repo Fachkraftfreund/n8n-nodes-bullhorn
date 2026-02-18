@@ -430,3 +430,54 @@ export async function bullhornApiRequestAllItems(
 
 	return allItems;
 }
+
+// ---------------------------------------------------------------------------
+// Public API: Fetch custom fields metadata from /meta endpoint
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate the prettified default label for a custom field name.
+ * e.g. "customTextBlock6" → "Custom Text Block 6"
+ */
+function prettifyFieldName(name: string): string {
+	return name
+		.replace(/^custom/, 'Custom ')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/([A-Za-z])(\d)/g, '$1 $2');
+}
+
+/**
+ * Returns true if the label is a genuinely user-assigned name
+ * (not just the internal name or prettified default).
+ */
+function hasCustomLabel(name: string, label: string): boolean {
+	if (label.toLowerCase() === name.toLowerCase()) return false;
+	if (label === prettifyFieldName(name)) return false;
+	return true;
+}
+
+export async function getCustomFieldsMeta(
+	this: BullhornContext,
+	entityName: string,
+): Promise<Array<{ name: string; label: string; dataType: string }>> {
+	const response = await bullhornApiRequest.call(
+		this, 'GET', `meta/${entityName}`, undefined, { fields: '*' },
+	);
+
+	const fields = (response.fields as IDataObject[]) || [];
+
+	return fields
+		.filter((f) => {
+			const name = f.name as string;
+			const label = f.label as string;
+			if (!name || !/^custom/i.test(name)) return false;
+			if (!label) return false;
+			return hasCustomLabel(name, label);
+		})
+		.map((f) => ({
+			name: f.name as string,
+			label: f.label as string,
+			dataType: (f.dataType as string) || 'String',
+		}))
+		.sort((a, b) => a.label.localeCompare(b.label));
+}

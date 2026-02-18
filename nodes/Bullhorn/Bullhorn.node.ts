@@ -1,13 +1,15 @@
 import {
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 	IDataObject,
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import { bullhornApiRequest, bullhornApiRequestAllItems } from './GenericFunctions';
+import { bullhornApiRequest, bullhornApiRequestAllItems, getCustomFieldsMeta } from './GenericFunctions';
 
 import { candidateOperations, candidateFields } from './descriptions/CandidateDescription';
 import { jobOrderOperations, jobOrderFields } from './descriptions/JobOrderDescription';
@@ -110,13 +112,32 @@ function buildBody(
 		}
 	}
 
-	// Merge custom fields JSON
+	// Merge custom fields JSON (from additionalFields)
 	if (customFieldsRaw && customFieldsRaw !== '{}') {
 		try {
 			const custom = JSON.parse(customFieldsRaw) as IDataObject;
 			Object.assign(body, custom);
 		} catch {
 			// Ignore malformed JSON — will be caught at runtime
+		}
+	}
+
+	// Merge custom fields from the dynamic dropdown (customFieldValues fixedCollection)
+	const customFieldValues = context.getNodeParameter('customFieldValues', index, {}) as IDataObject;
+	if (customFieldValues.field) {
+		const fieldEntries = customFieldValues.field as IDataObject[];
+		for (const entry of fieldEntries) {
+			const fieldName = entry.fieldName as string;
+			const fieldValue = entry.fieldValue as string;
+			if (fieldName && fieldValue !== undefined && fieldValue !== '') {
+				// Auto-coerce to number if applicable
+				const numVal = Number(fieldValue);
+				if (!isNaN(numVal) && fieldValue.trim() !== '') {
+					body[fieldName] = numVal;
+				} else {
+					body[fieldName] = fieldValue;
+				}
+			}
 		}
 	}
 
@@ -174,7 +195,64 @@ export class Bullhorn implements INodeType {
 			...opportunityOperations, ...opportunityFields,
 			...appointmentOperations, ...appointmentFields,
 			...taskOperations, ...taskFields,
+
+			// Custom Fields — dynamic dropdown from /meta (applies to all resources)
+			{
+				displayName: 'Custom Fields',
+				name: 'customFieldValues',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				displayOptions: { show: { operation: ['create', 'update'] } },
+				default: {},
+				description: 'Set custom fields by their display name (only shows fields with user-assigned labels)',
+				options: [
+					{
+						displayName: 'Field',
+						name: 'field',
+						values: [
+							{
+								displayName: 'Field Name',
+								name: 'fieldName',
+								type: 'options',
+								typeOptions: {
+									loadOptionsMethod: 'getCustomFields',
+								},
+								default: '',
+								description: 'Select a custom field',
+							},
+							{
+								displayName: 'Value',
+								name: 'fieldValue',
+								type: 'string',
+								default: '',
+								description: 'Value to set',
+							},
+						],
+					},
+				],
+			},
 		],
+	};
+
+	methods = {
+		loadOptions: {
+			async getCustomFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const resource = this.getCurrentNodeParameter('resource') as string;
+				const entityName = ENTITY_MAP[resource];
+				if (!entityName) return [];
+
+				try {
+					const fields = await getCustomFieldsMeta.call(this, entityName);
+					return fields.map((f) => ({
+						name: `${f.label} (${f.name})`,
+						value: f.name,
+						description: `Type: ${f.dataType}`,
+					}));
+				} catch {
+					return [];
+				}
+			},
+		},
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
