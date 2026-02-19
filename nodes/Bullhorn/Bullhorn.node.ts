@@ -60,6 +60,9 @@ const ENTITY_REF_FIELDS = new Set([
 	'owner', 'sendingUser', 'personReference', 'candidateReference', 'category',
 ]);
 
+// Fields that must be nested inside an `address` object for the Bullhorn API
+const ADDRESS_FIELDS = new Set(['address1', 'address2', 'city', 'state', 'zip', 'countryID']);
+
 /**
  * Wrap an ID value as a Bullhorn entity reference: { id: <number> }
  */
@@ -98,6 +101,8 @@ function buildBody(
 	const additionalFields = context.getNodeParameter('additionalFields', index, {}) as IDataObject;
 	let customFieldsRaw: string | undefined;
 
+	const addressFields: IDataObject = {};
+
 	for (const [key, value] of Object.entries(additionalFields)) {
 		if (key === 'customFields') {
 			customFieldsRaw = value as string;
@@ -105,11 +110,18 @@ function buildBody(
 		}
 		if (value === '' || value === 0 || value === undefined || value === null) continue;
 
-		if (ENTITY_REF_FIELDS.has(key)) {
+		if (ADDRESS_FIELDS.has(key)) {
+			addressFields[key] = value;
+		} else if (ENTITY_REF_FIELDS.has(key)) {
 			body[key] = toEntityRef(value);
 		} else {
 			body[key] = value as IDataObject;
 		}
+	}
+
+	// Nest address fields under `address` as required by the Bullhorn API
+	if (Object.keys(addressFields).length > 0) {
+		body.address = addressFields;
 	}
 
 	// Merge custom fields JSON (from additionalFields)
