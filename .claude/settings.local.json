@@ -11,7 +11,8 @@
       "Bash(npx gulp build:icons)",
       "Bash(npx tsx:*)",
       "Bash(npx ts-node:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -253,13 +253,30 @@ export class Bullhorn implements INodeType {
 				const entityName = ENTITY_MAP[resource];
 				if (!entityName) return [];
 
+				// Collect field names already selected in the customFieldValues fixedCollection
+				const alreadySelected = new Set<string>();
+				try {
+					const current = this.getCurrentNodeParameter('customFieldValues') as IDataObject | undefined;
+					if (current?.field) {
+						for (const entry of current.field as IDataObject[]) {
+							if (entry.fieldName) {
+								alreadySelected.add(entry.fieldName as string);
+							}
+						}
+					}
+				} catch {
+					// Parameter may not exist yet — ignore
+				}
+
 				try {
 					const fields = await getCustomFieldsMeta.call(this, entityName);
-					return fields.map((f) => ({
-						name: `${f.label} (${f.name})`,
-						value: f.name,
-						description: `Type: ${f.dataType}`,
-					}));
+					return fields
+						.filter((f) => !alreadySelected.has(f.name))
+						.map((f) => ({
+							name: `${f.label} (${f.name})`,
+							value: f.name,
+							description: `Type: ${f.dataType}`,
+						}));
 				} catch {
 					return [];
 				}
