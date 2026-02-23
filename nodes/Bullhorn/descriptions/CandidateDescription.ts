@@ -92,6 +92,7 @@ export const candidateFields: INodeProperties[] = [
 			{ displayName: 'City', name: 'city', type: 'string', default: '' },
 			{ displayName: 'State', name: 'state', type: 'string', default: '' },
 			{ displayName: 'Zip', name: 'zip', type: 'string', default: '' },
+			{ displayName: 'Occupation', name: 'occupation', type: 'string', default: '', description: 'Current occupation or job title' },
 			{ displayName: 'Source', name: 'source', type: 'string', default: '', description: 'Candidate source' },
 			{ displayName: 'Category ID', name: 'category', type: 'number', default: 0 },
 			{ displayName: 'Owner ID', name: 'owner', type: 'number', default: 0, description: 'CorporateUser ID of the owner' },
