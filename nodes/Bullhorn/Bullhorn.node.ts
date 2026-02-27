@@ -42,7 +42,7 @@ const ENTITY_MAP: Record<string, string> = {
 // These are the field names as they appear in the n8n parameter definitions.
 const REQUIRED_CREATE_FIELDS: Record<string, string[]> = {
 	candidate: ['firstName', 'lastName', 'name', 'status'],
-	jobOrder: ['title', 'clientCorporation', 'status'],
+	jobOrder: ['title', 'clientCorporation', 'clientContact', 'status'],
 	jobSubmission: ['candidate', 'jobOrder', 'status'],
 	placement: ['candidate', 'jobOrder', 'status', 'dateBegin', 'payRate', 'clientBillRate'],
 	clientContact: ['firstName', 'lastName', 'clientCorporation', 'name', 'status'],
@@ -56,7 +56,7 @@ const REQUIRED_CREATE_FIELDS: Record<string, string[]> = {
 
 // Fields that reference other entities and must be sent as { id: value }
 const ENTITY_REF_FIELDS = new Set([
-	'clientCorporation', 'candidate', 'jobOrder', 'jobSubmission',
+	'clientCorporation', 'clientContact', 'candidate', 'jobOrder', 'jobSubmission',
 	'owner', 'sendingUser', 'personReference', 'candidateReference', 'category',
 ]);
 

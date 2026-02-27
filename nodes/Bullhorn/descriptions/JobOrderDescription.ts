@@ -54,6 +54,15 @@ export const jobOrderFields: INodeProperties[] = [
 		description: 'ID of the client corporation',
 	},
 	{
+		displayName: 'Client Contact ID',
+		name: 'clientContact',
+		type: 'number',
+		required: true,
+		displayOptions: { show: { resource: ['jobOrder'], operation: ['create'] } },
+		default: 0,
+		description: 'ID of the client contact',
+	},
+	{
 		displayName: 'Status',
 		name: 'status',
 		type: 'string',
