@@ -73,6 +73,13 @@ async function getDataCenterUrls(
 			);
 		}
 
+		if (!restUrl) {
+			throw new NodeOperationError(
+				context.getNode(),
+				'loginInfo did not return a restUrl. Select a data center manually or use the Custom option.',
+			);
+		}
+
 		// oauthUrl can be:
 		//   "https://auth-ger.bullhornstaffing.com/oauth"
 		//   "https://auth-cls99.bullhornstaffing.com/oauth/authorize"
@@ -232,20 +239,35 @@ async function loginToRest(
 	restLoginBaseUrl: string,
 	accessToken: string,
 ): Promise<{ bhRestToken: string; restUrl: string }> {
-	const response = (await context.helpers.httpRequest({
+	const loginUrl = `${restLoginBaseUrl}/rest-services/login`;
+
+	const raw = (await context.helpers.httpRequest({
 		method: 'POST',
-		url: `${restLoginBaseUrl}/rest-services/login`,
+		url: loginUrl,
 		qs: {
 			version: '2.0',
 			access_token: accessToken,
 		},
 		json: true,
+		ignoreHttpStatusErrors: true,
+		returnFullResponse: true,
 	})) as IDataObject;
+
+	const statusCode = raw.statusCode as number;
+	const response = (raw.body ?? raw) as IDataObject;
+
+	if (statusCode >= 400) {
+		const detail = typeof response === 'string' ? response : JSON.stringify(response);
+		throw new NodeOperationError(
+			context.getNode(),
+			`Bullhorn REST login failed (HTTP ${statusCode}) at ${loginUrl}: ${detail}`,
+		);
+	}
 
 	if (!response.BhRestToken) {
 		throw new NodeOperationError(
 			context.getNode(),
-			`Bullhorn REST login failed: ${JSON.stringify(response)}`,
+			`Bullhorn REST login returned no BhRestToken: ${JSON.stringify(response)}`,
 		);
 	}
 
@@ -358,7 +380,26 @@ export async function bullhornApiRequest(
 	query?: IDataObject,
 	retried = false,
 ): Promise<IDataObject> {
-	const session = await getSession(this);
+	let session;
+	try {
+		session = await getSession(this);
+	} catch (error) {
+		// If auth failed and we haven't retried, clear cache and try once more
+		if (!retried) {
+			clearSessionCache(this);
+			try {
+				session = await getSession(this);
+			} catch (retryError) {
+				throw new NodeApiError(this.getNode(), retryError as JsonObject, {
+					message: `Bullhorn authentication failed: ${(retryError as Error).message}`,
+				});
+			}
+		} else {
+			throw new NodeApiError(this.getNode(), error as JsonObject, {
+				message: `Bullhorn authentication failed: ${(error as Error).message}`,
+			});
+		}
+	}
 
 	const options: IHttpRequestOptions = {
 		method,
