@@ -41,7 +41,7 @@ export const jobOrderFields: INodeProperties[] = [
 		name: 'title',
 		type: 'string',
 		required: true,
-		displayOptions: { show: { resource: ['jobOrder'], operation: ['create'] } },
+		displayOptions: { show: { resource: ['jobOrder'], operation: ['create', 'update'] } },
 		default: '',
 	},
 	{
@@ -67,7 +67,7 @@ export const jobOrderFields: INodeProperties[] = [
 		name: 'status',
 		type: 'string',
 		required: true,
-		displayOptions: { show: { resource: ['jobOrder'], operation: ['create'] } },
+		displayOptions: { show: { resource: ['jobOrder'], operation: ['create', 'update'] } },
 		default: 'Accepting Candidates',
 	},
 
