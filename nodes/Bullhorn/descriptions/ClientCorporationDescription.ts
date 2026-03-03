@@ -62,6 +62,7 @@ export const clientCorporationFields: INodeProperties[] = [
 		displayOptions: { show: { resource: ['clientCorporation'], operation: ['create', 'update'] } },
 		default: {},
 		options: [
+			{ displayName: 'Status', name: 'status', type: 'string', default: '' },
 			{ displayName: 'Phone', name: 'phone', type: 'string', default: '' },
 			{ displayName: 'Fax', name: 'fax', type: 'string', default: '' },
 			{ displayName: 'Website', name: 'companyURL', type: 'string', default: '' },
