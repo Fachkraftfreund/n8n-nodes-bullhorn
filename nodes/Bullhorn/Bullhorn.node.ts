@@ -174,7 +174,14 @@ function buildBody(
 	if (customFieldsRaw && customFieldsRaw !== '{}') {
 		try {
 			const custom = JSON.parse(customFieldsRaw) as IDataObject;
-			Object.assign(body, custom);
+			for (const [k, v] of Object.entries(custom)) {
+				if (/^customDate/i.test(k)) {
+					const ts = toBullhornTimestamp(v);
+					if (ts !== null) body[k] = ts;
+				} else {
+					body[k] = v as IDataObject;
+				}
+			}
 		} catch {
 			// Ignore malformed JSON — will be caught at runtime
 		}
@@ -188,12 +195,17 @@ function buildBody(
 			const fieldName = entry.fieldName as string;
 			const fieldValue = entry.fieldValue as string;
 			if (fieldName && fieldValue !== undefined && fieldValue !== '') {
-				// Auto-coerce to number if applicable
-				const numVal = Number(fieldValue);
-				if (!isNaN(numVal) && fieldValue.trim() !== '') {
-					body[fieldName] = numVal;
+				if (/^customDate/i.test(fieldName)) {
+					const ts = toBullhornTimestamp(fieldValue);
+					if (ts !== null) body[fieldName] = ts;
 				} else {
-					body[fieldName] = fieldValue;
+					// Auto-coerce to number if applicable
+					const numVal = Number(fieldValue);
+					if (!isNaN(numVal) && fieldValue.trim() !== '') {
+						body[fieldName] = numVal;
+					} else {
+						body[fieldName] = fieldValue;
+					}
 				}
 			}
 		}
