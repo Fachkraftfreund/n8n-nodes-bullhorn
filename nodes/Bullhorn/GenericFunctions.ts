@@ -378,14 +378,14 @@ export async function bullhornApiRequest(
 	endpoint: string,
 	body?: IDataObject,
 	query?: IDataObject,
-	retried = false,
+	attempt = 1,
 ): Promise<IDataObject> {
 	let session;
 	try {
 		session = await getSession(this);
 	} catch (error) {
 		// If auth failed and we haven't retried, clear cache and try once more
-		if (!retried) {
+		if (attempt === 1) {
 			clearSessionCache(this);
 			try {
 				session = await getSession(this);
@@ -421,16 +421,17 @@ export async function bullhornApiRequest(
 	} catch (error) {
 		const statusCode = (error as IDataObject).httpCode || (error as IDataObject).statusCode;
 
-		// 401: clear cache and retry once
-		if (statusCode === 401 && !retried) {
+		// 401: clear cache and retry
+		if (statusCode === 401 && attempt === 1) {
 			clearSessionCache(this);
-			return bullhornApiRequest.call(this, method, endpoint, body, query, true);
+			return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
 		}
 
-		// 429: rate limited — wait and retry once
-		if (statusCode === 429 && !retried) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			return bullhornApiRequest.call(this, method, endpoint, body, query, true);
+		// 429: rate limited — exponential backoff (1s, 2s, 4s, … capped at 60s)
+		if (statusCode === 429 && attempt <= 7) {
+			const delay = Math.min(1000 * 2 ** (attempt - 1), 60_000);
+			await new Promise((resolve) => setTimeout(resolve, delay));
+			return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
 		}
 
 		throw new NodeApiError(this.getNode(), error as JsonObject, {
@@ -482,9 +483,9 @@ export async function bullhornApiRequestAllItems(
  */
 function prettifyFieldName(name: string): string {
 	return name
-		.replace(/^custom/, 'Custom ')
 		.replace(/([a-z])([A-Z])/g, '$1 $2')
-		.replace(/([A-Za-z])(\d)/g, '$1 $2');
+		.replace(/([A-Za-z])(\d)/g, '$1 $2')
+		.replace(/^./, (c) => c.toUpperCase());
 }
 
 /**
@@ -511,7 +512,7 @@ export async function getCustomFieldsMeta(
 		.filter((f) => {
 			const name = f.name as string;
 			const label = f.label as string;
-			if (!name || !/^custom/i.test(name)) return false;
+			if (!name || !/custom/i.test(name)) return false;
 			if (!label) return false;
 			return hasCustomLabel(name, label);
 		})

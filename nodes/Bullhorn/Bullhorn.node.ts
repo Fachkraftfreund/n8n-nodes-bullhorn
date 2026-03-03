@@ -3,6 +3,7 @@ import {
 	ILoadOptionsFunctions,
 	INodeExecutionData,
 	INodePropertyOptions,
+	INodeProperties,
 	INodeType,
 	INodeTypeDescription,
 	IDataObject,
@@ -63,6 +64,45 @@ const ENTITY_REF_FIELDS = new Set([
 // Fields that must be nested inside an `address` object for the Bullhorn API
 const ADDRESS_FIELDS = new Set(['address1', 'address2', 'city', 'state', 'zip', 'countryID']);
 
+// Collect all dateTime field names from the entity descriptions automatically,
+// so any new dateTime field added to a description is picked up without changes here.
+function collectDateTimeFields(...propArrays: INodeProperties[][]): Set<string> {
+	const names = new Set<string>();
+	for (const props of propArrays) {
+		for (const prop of props) {
+			if (prop.type === 'dateTime') names.add(prop.name);
+			if (Array.isArray(prop.options)) {
+				for (const opt of prop.options) {
+					if ('type' in opt && (opt as INodeProperties).type === 'dateTime') {
+						names.add((opt as INodeProperties).name);
+					}
+				}
+			}
+		}
+	}
+	return names;
+}
+
+const DATE_FIELDS = collectDateTimeFields(
+	candidateFields, jobOrderFields, jobSubmissionFields, placementFields,
+	clientContactFields, clientCorporationFields, noteFields, leadFields,
+	opportunityFields, appointmentFields, taskFields,
+);
+
+/**
+ * Convert a date value (ISO string or existing timestamp) to a Bullhorn
+ * millisecond-epoch timestamp. Uses noon UTC to avoid timezone edge cases.
+ */
+function toBullhornTimestamp(value: unknown): number | null {
+	if (value === null || value === undefined || value === '') return null;
+	if (typeof value === 'number') return value;
+	const str = String(value);
+	const dateOnly = str.split('T')[0];
+	const [year, month, day] = dateOnly.split('-').map(Number);
+	if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+	return Date.UTC(year, month - 1, day, 12, 0, 0, 0);
+}
+
 /**
  * Wrap an ID value as a Bullhorn entity reference: { id: <number> }
  */
@@ -91,6 +131,9 @@ function buildBody(
 			const value = context.getNodeParameter(field, index);
 			if (ENTITY_REF_FIELDS.has(field)) {
 				body[field] = toEntityRef(value);
+			} else if (DATE_FIELDS.has(field)) {
+				const ts = toBullhornTimestamp(value);
+				if (ts !== null) body[field] = ts;
 			} else {
 				body[field] = value as IDataObject;
 			}
@@ -114,6 +157,9 @@ function buildBody(
 			addressFields[key] = value;
 		} else if (ENTITY_REF_FIELDS.has(key)) {
 			body[key] = toEntityRef(value);
+		} else if (DATE_FIELDS.has(key)) {
+			const ts = toBullhornTimestamp(value);
+			if (ts !== null) body[key] = ts;
 		} else {
 			body[key] = value as IDataObject;
 		}
