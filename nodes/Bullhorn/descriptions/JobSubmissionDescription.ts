@@ -70,6 +70,7 @@ export const jobSubmissionFields: INodeProperties[] = [
 		displayOptions: { show: { resource: ['jobSubmission'], operation: ['create', 'update'] } },
 		default: {},
 		options: [
+			{ displayName: 'Status', name: 'status', type: 'string', default: '' },
 			{ displayName: 'Date Web Response', name: 'dateWebResponse', type: 'dateTime', default: '' },
 			{ displayName: 'Sending User ID', name: 'sendingUser', type: 'number', default: 0 },
 			{ displayName: 'Source', name: 'source', type: 'string', default: '' },
