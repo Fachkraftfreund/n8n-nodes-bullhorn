@@ -73,6 +73,7 @@ export const clientCorporationFields: INodeProperties[] = [
 			{ displayName: 'City', name: 'city', type: 'string', default: '' },
 			{ displayName: 'State', name: 'state', type: 'string', default: '' },
 			{ displayName: 'Zip', name: 'zip', type: 'string', default: '' },
+			{ displayName: 'Notes', name: 'notes', type: 'string', default: '' },
 			{ displayName: 'Owner ID', name: 'owner', type: 'number', default: 0 },
 			{ displayName: 'Custom Fields (JSON)', name: 'customFields', type: 'json', default: '{}' },
 		],
