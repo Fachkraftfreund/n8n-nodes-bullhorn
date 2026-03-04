@@ -33,6 +33,7 @@ export const leadFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['lead'], operation: ['get', 'getAll'] } },
 		default: 'id,firstName,lastName,email,status',
+		description: 'Comma-separated list of fields to return. Available fields: id, address, assignedTo, businessSectors, campaignSource, candidates, category, categories, clientContacts, clientCorporation, comments, companyName, companyURL, conversionSource, dateAdded, dateLastComment, dateLastModified, dateLastVisited, description, distributionLists, division, email, email2, email3, externalID, fax, fax2, fax3, firstName, isDeleted, lastName, leadSource, massMailOptOut, middleName, mobile, name, namePrefix, nameSuffix, nickName, notes, numEmployees, occupation, owner, ownerCorporation, pager, phone, phone2, phone3, preferredContact, primarySkills, priority, referredByPerson, reportToPerson, role, salary, salaryLow, secondarySkills, skillSet, smsOptIn, specialties, status, tearsheets, timeZoneOffsetEST, type, willRelocate, plus customDate1-3, customFloat1-3, customInt1-3, customText1-20, customTextBlock1-5.',
 	},
 
 	// Create required

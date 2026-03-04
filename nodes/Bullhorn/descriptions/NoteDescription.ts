@@ -33,6 +33,7 @@ export const noteFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['note'], operation: ['get', 'getAll'] } },
 		default: 'id,action,comments,dateAdded,personReference',
+		description: 'Comma-separated list of fields to return. Available fields: id, action, bhTimeStamp, candidates, clientContacts, commentingPerson, comments, corporateUsers, dateAdded, dateLastModified, entities, externalID, isDeleted, jobOrder, jobOrders, leads, minutesSpent, opportunities, people, personReference, placements, primaryDepartmentName.',
 	},
 
 	// Create required

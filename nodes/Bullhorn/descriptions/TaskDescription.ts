@@ -33,6 +33,7 @@ export const taskFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['task'], operation: ['get', 'getAll'] } },
 		default: 'id,subject,status,dateBegin,dateDue',
+		description: 'Comma-separated list of fields to return. Available fields: id, assignees, candidate, childTasks, clientContact, dateAdded, dateBegin, dateCompleted, dateEnd, dateLastModified, description, isCompleted, isDeleted, isPrivate, jobOrder, lead, notificationMinutes, opportunity, owner, parentTask, placement, priority, recurrenceDayBits, recurrenceFrequency, recurrenceStyle, recurrenceType, subject, taskUUID, type.',
 	},
 
 	// Create required

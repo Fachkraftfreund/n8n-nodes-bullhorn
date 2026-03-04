@@ -37,7 +37,7 @@ export const candidateFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['candidate'], operation: ['get', 'getAll'] } },
 		default: 'id,firstName,lastName,email,status',
-		description: 'Comma-separated list of fields to return',
+		description: 'Comma-separated list of fields to return. Available fields: id, address, businessSectors, candidateSource, category, categories, certifications, comments, companyName, companyURL, dateAdded, dateAvailable, dateAvailableEnd, dateI9Expiration, dateLastComment, dateLastModified, dateNextCall, dateOfBirth, dayRate, dayRateLow, degreeList, description, desiredLocations, disability, educationDegree, email, email2, email3, employeeType, employmentPreference, ethnicity, experience, externalID, fax, fax2, fax3, firstName, gender, hourlyRate, hourlyRateLow, i9OnFile, interviews, isDeleted, lastName, leads, mobile, name, namePrefix, nameSuffix, nickName, numCategories, numOwners, occupation, owner, pager, paperWorkOnFile, phone, phone2, phone3, placements, preferredContact, primarySkills, recentClientList, referredBy, referredByPerson, salary, salaryLow, secondaryAddress, secondaryOwners, secondarySkills, sendouts, skillSet, smsOptIn, source, specialties, status, submissions, tasks, timeZoneOffsetEST, travelLimit, travelMethod, type, username, veteran, webResponses, willRelocate, workAuthorized, workPhone, plus customDate1-13, customFloat1-23, customInt1-23, customText1-40, customTextBlock1-10.',
 	},
 
 	// ------ Create: required fields ------

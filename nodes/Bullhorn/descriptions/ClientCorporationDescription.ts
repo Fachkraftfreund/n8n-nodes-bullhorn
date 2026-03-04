@@ -33,6 +33,7 @@ export const clientCorporationFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['clientCorporation'], operation: ['get', 'getAll'] } },
 		default: 'id,name,status,phone',
+		description: 'Comma-separated list of fields to return. Available fields: id, address, annualRevenue, billingAddress, billingContact, billingFrequency, billingPhone, businessSectorList, childClientCorporations, clientContacts, companyDescription, companyURL, competitors, culture, dateAdded, dateFounded, dateLastModified, department, externalID, exemptionStatus, feeArrangement, funding, industryList, invoiceFormat, leads, name, notes, numEmployees, numOffices, owners, ownerShip, parentClientCorporation, phone, revenue, requirements, status, taxRate, tickerSymbol, workWeekStart, plus customDate1-3, customFloat1-3, customInt1-3, customText1-20, customTextBlock1-5.',
 	},
 
 	// Create required

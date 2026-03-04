@@ -33,6 +33,7 @@ export const placementFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['placement'], operation: ['get', 'getAll'] } },
 		default: 'id,candidate,jobOrder,status,dateBegin,payRate',
+		description: 'Comma-separated list of fields to return. Available fields: id, appointments, approvingClientContact, billingClientContact, billingFrequency, bonusPackage, candidate, clientBillRate, clientOvertimeRate, comments, commissions, costCenter, dateAdded, dateBegin, dateClientEffective, dateEffective, dateEnd, dateLastModified, daysGuaranteed, daysProRated, durationWeeks, employeeType, employmentStartDate, employmentType, exemptionStatus, fee, hoursOfOperation, hoursPerDay, isWorkFromHome, jobOrder, jobSubmission, location, markUpPercentage, notes, optionsPackage, overtimeRate, owner, payGroup, payRate, placementCertifications, positionCode, referralFee, referralFeeType, reportTo, salary, salaryUnit, shift, statementClientContact, status, tasks, taxRate, taxState, terminationReason, timeUnits, vendorClientCorporation, workWeekStart, plus customDate1-13, customFloat1-23, customInt1-23, customText1-60, customTextBlock1-10.',
 	},
 
 	// Create required

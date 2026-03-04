@@ -33,6 +33,7 @@ export const clientContactFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['clientContact'], operation: ['get', 'getAll'] } },
 		default: 'id,firstName,lastName,email,clientCorporation',
+		description: 'Comma-separated list of fields to return. Available fields: id, address, businessSectors, category, categories, certifications, clientCorporation, comments, dateAdded, dateLastModified, dateLastVisit, description, desiredCategories, desiredSkills, desiredSpecialties, division, email, email2, email3, externalID, fax, fax2, fax3, firstName, isDeleted, lastName, leads, massMailOptOut, middleName, mobile, name, namePrefix, nameSuffix, nickName, numEmployees, occupation, office, owner, pager, phone, phone2, phone3, preferredContact, referredByPerson, reportToPerson, secondaryAddress, secondaryOwners, skills, smsOptIn, source, status, timeZoneOffsetEST, type, username, plus customDate1-3, customFloat1-3, customInt1-3, customText1-20, customTextBlock1-5.',
 	},
 
 	// Create required

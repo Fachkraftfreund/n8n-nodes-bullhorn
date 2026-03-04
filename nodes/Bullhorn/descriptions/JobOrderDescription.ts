@@ -33,6 +33,7 @@ export const jobOrderFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['jobOrder'], operation: ['get', 'getAll'] } },
 		default: 'id,title,status,clientCorporation',
+		description: 'Comma-separated list of fields to return. Available fields: id, address, appointments, approvedPlacements, assignedUsers, benefits, billRateCategoryID, bonusPackage, branch, branchCode, businessSectors, categories, certificationList, certifications, clientBillRate, clientContact, clientCorporation, costCenter, dateAdded, dateClosed, dateEnd, dateLastExported, dateLastModified, dateLastPublished, degreeList, description, durationWeeks, educationDegree, employmentType, estimatedEndDate, externalCategoryID, externalID, feeArrangement, hoursOfOperation, hoursPerWeek, interviews, isDeleted, isInterviewRequired, isJobcastPublished, isOpen, isPublic, isWorkFromHome, jobBoardList, jobCode, location, markUpPercentage, notes, numOpenings, onSite, opportunity, optionsPackage, owner, payRate, placements, publicDescription, publishedCategory, publishedZip, reasonClosed, reportTo, reportToClientContact, responseUser, salary, salaryUnit, sendouts, shift, skillList, skills, source, specialties, startDate, status, submissions, tasks, taxRate, taxStatus, tearsheets, timeUnits, title, travelRequirements, type, webResponses, willRelocate, willSponsor, workersCompRate, yearsRequired, plus customDate1-3, customFloat1-3, customInt1-8, customText1-40, customTextBlock1-5.',
 	},
 
 	// Create required

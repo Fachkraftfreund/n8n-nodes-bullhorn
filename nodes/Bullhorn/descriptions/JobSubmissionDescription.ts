@@ -33,6 +33,7 @@ export const jobSubmissionFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['jobSubmission'], operation: ['get', 'getAll'] } },
 		default: 'id,candidate,jobOrder,status,dateAdded',
+		description: 'Comma-separated list of fields to return. Available fields: id, appointments, billRate, branch, candidate, comments, dateAdded, dateLastModified, dateWebResponse, endDate, isDeleted, isHidden, jobOrder, latestAppointment, migrateGUID, owners, payRate, salary, sendingUser, source, startDate, status, tasks, plus customDate1-5, customFloat1-5, customInt1-5, customText1-25, customTextBlock1-5.',
 	},
 
 	// Create required

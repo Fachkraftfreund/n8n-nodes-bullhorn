@@ -33,6 +33,7 @@ export const opportunityFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['opportunity'], operation: ['get', 'getAll'] } },
 		default: 'id,title,status,clientCorporation',
+		description: 'Comma-separated list of fields to return. Available fields: id, actualCloseDate, address, appointments, assignedDate, assignedUsers, benefits, billRateCategoryID, bonusPackage, branchCode, businessSector, businessSectors, campaignSource, category, categories, certifications, clientContact, clientCorporation, committed, dateAdded, dateLastModified, dealValue, degreeList, description, educationDegree, effectiveDate, estimatedDuration, estimatedEndDate, estimatedHoursPerWeek, estimatedStartDate, estimatedBillRate, expectedCloseDate, expectedFee, expectedPayRate, externalCategoryID, externalID, ignoreUntilDate, isDeleted, isOpen, jobOrders, lead, markUpPercentage, notes, numOpenings, onSite, optionsPackage, owner, priority, publicDescription, publishedZip, reasonClosed, salary, salaryUnit, skillList, skills, source, specialties, status, tasks, taxRate, taxStatus, tearsheets, title, type, weightedDealValue, willRelocate, winProbabilityPercent, yearsRequired, plus customDate1-3, customFloat1-3, customInt1-3, customText1-20, customTextBlock1-5.',
 	},
 
 	// Create required

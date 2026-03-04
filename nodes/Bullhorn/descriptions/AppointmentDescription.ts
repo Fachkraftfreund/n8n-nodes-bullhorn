@@ -33,6 +33,7 @@ export const appointmentFields: INodeProperties[] = [
 		type: 'string',
 		displayOptions: { show: { resource: ['appointment'], operation: ['get', 'getAll'] } },
 		default: 'id,subject,dateBegin,dateEnd,type',
+		description: 'Comma-separated list of fields to return. Available fields: id, attendees, appointmentUUID, candidateReference, clientContactReference, childAppointments, communicationMethod, dateAdded, dateBegin, dateEnd, dateLastModified, description, isAllDay, isDeleted, isPrivate, jobOrder, lead, location, notificationMinutes, opportunity, owner, parentAppointment, placement, recurrenceDayBits, recurrenceFrequency, recurrenceStyle, recurrenceType, subject, type.',
 	},
 
 	// Create required
