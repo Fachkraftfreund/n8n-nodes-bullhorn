@@ -87,6 +87,8 @@ export const jobOrderFields: INodeProperties[] = [
 			{ displayName: 'Start Date', name: 'startDate', type: 'dateTime', default: '' },
 			{ displayName: 'Num Openings', name: 'numOpenings', type: 'number', default: 1 },
 			{ displayName: 'Owner ID', name: 'owner', type: 'number', default: 0 },
+			{ displayName: 'City', name: 'city', type: 'string', default: '' },
+			{ displayName: 'PLZ', name: 'zip', type: 'string', default: '', description: 'Postal code / ZIP' },
 			{ displayName: 'Custom Fields (JSON)', name: 'customFields', type: 'json', default: '{}' },
 		],
 	},
