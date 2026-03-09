@@ -193,15 +193,16 @@ function buildBody(
 		const fieldEntries = customFieldValues.field as IDataObject[];
 		for (const entry of fieldEntries) {
 			const fieldName = entry.fieldName as string;
-			const fieldValue = entry.fieldValue as string;
-			if (fieldName && fieldValue !== undefined && fieldValue !== '') {
+			const fieldValue = entry.fieldValue;
+			if (fieldName && fieldValue != null && fieldValue !== '') {
 				if (/^customDate/i.test(fieldName)) {
 					const ts = toBullhornTimestamp(fieldValue);
 					if (ts !== null) body[fieldName] = ts;
 				} else {
 					// Auto-coerce to number if applicable
-					const numVal = Number(fieldValue);
-					if (!isNaN(numVal) && fieldValue.trim() !== '') {
+					const strVal = String(fieldValue);
+					const numVal = Number(strVal);
+					if (!isNaN(numVal) && strVal.trim() !== '') {
 						body[fieldName] = numVal;
 					} else {
 						body[fieldName] = fieldValue;
