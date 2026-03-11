@@ -70,6 +70,13 @@ export class BullhornTrigger implements INodeType {
 				typeOptions: { minValue: 1, maxValue: 500 },
 				description: 'Maximum number of events to retrieve per poll cycle',
 			},
+			{
+				displayName: 'Deduplicate Events',
+				name: 'deduplicateEvents',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to keep only the latest event per entity and event type, removing duplicates from the same poll cycle',
+			},
 		],
 	};
 
@@ -148,7 +155,23 @@ export class BullhornTrigger implements INodeType {
 				return null;
 			}
 
-			const returnData: INodeExecutionData[] = events.map((event) => ({
+			const deduplicateEvents = this.getNodeParameter('deduplicateEvents', true) as boolean;
+			let processedEvents = events;
+
+			if (deduplicateEvents) {
+				// Keep only the latest event per entity+eventType combo
+				const latestByKey = new Map<string, IDataObject>();
+				for (const event of events) {
+					const key = `${event.entityName}_${event.entityId}_${event.eventType}`;
+					const existing = latestByKey.get(key);
+					if (!existing || (event.eventTimestamp as number) > (existing.eventTimestamp as number)) {
+						latestByKey.set(key, event);
+					}
+				}
+				processedEvents = Array.from(latestByKey.values());
+			}
+
+			const returnData: INodeExecutionData[] = processedEvents.map((event) => ({
 				json: {
 					eventType: event.eventType,
 					entityName: event.entityName,
