@@ -82,7 +82,7 @@ export class BullhornTrigger implements INodeType {
 				name: 'updatedField',
 				type: 'string',
 				default: '',
-				description: 'Optional field name filter. When set, the trigger only fires for events where this field appears in updatedProperties',
+				description: 'Optional field name filter. When set, update events only fire if this field appears in updatedProperties. Insert and delete events are unaffected.',
 			},
 		],
 	};
@@ -182,6 +182,11 @@ export class BullhornTrigger implements INodeType {
 			if (updatedField !== '') {
 				const normalizedUpdatedField = updatedField.toLowerCase();
 				processedEvents = processedEvents.filter((event) => {
+					// Only filter UPDATED events — let other event types (INSERTED, DELETED) pass through
+					if (event.eventType !== 'UPDATED') {
+						return true;
+					}
+
 					const updatedPropertiesRaw = event.updatedProperties;
 					const updatedProperties = Array.isArray(updatedPropertiesRaw)
 						? (updatedPropertiesRaw as string[])
