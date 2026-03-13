@@ -77,6 +77,13 @@ export class BullhornTrigger implements INodeType {
 				default: true,
 				description: 'Whether to keep only the latest event per entity and event type, removing duplicates from the same poll cycle',
 			},
+			{
+				displayName: 'Updated Field',
+				name: 'updatedField',
+				type: 'string',
+				default: '',
+				description: 'Optional field name filter. When set, the trigger only fires for events where this field appears in updatedProperties',
+			},
 		],
 	};
 
@@ -156,6 +163,7 @@ export class BullhornTrigger implements INodeType {
 			}
 
 			const deduplicateEvents = this.getNodeParameter('deduplicateEvents', true) as boolean;
+			const updatedField = (this.getNodeParameter('updatedField', '') as string).trim();
 			let processedEvents = events;
 
 			if (deduplicateEvents) {
@@ -169,6 +177,26 @@ export class BullhornTrigger implements INodeType {
 					}
 				}
 				processedEvents = Array.from(latestByKey.values());
+			}
+
+			if (updatedField !== '') {
+				const normalizedUpdatedField = updatedField.toLowerCase();
+				processedEvents = processedEvents.filter((event) => {
+					const updatedPropertiesRaw = event.updatedProperties;
+					const updatedProperties = Array.isArray(updatedPropertiesRaw)
+						? (updatedPropertiesRaw as string[])
+						: typeof updatedPropertiesRaw === 'string'
+							? updatedPropertiesRaw.split(',').map((value) => value.trim()).filter((value) => value !== '')
+							: [];
+
+					return updatedProperties.some(
+						(field) => typeof field === 'string' && field.toLowerCase() === normalizedUpdatedField,
+					);
+				});
+			}
+
+			if (processedEvents.length === 0) {
+				return null;
 			}
 
 			const returnData: INodeExecutionData[] = processedEvents.map((event) => ({
