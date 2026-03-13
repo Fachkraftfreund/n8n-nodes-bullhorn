@@ -140,6 +140,31 @@ function buildBody(
 		}
 	}
 
+	// For updates, collect top-level fields that are shown in the UI but not in additionalFields
+	// (e.g. status is a required create field that is also editable during updates)
+	if (!includeRequired) {
+		const UPDATE_FIELDS: Record<string, string[]> = {
+			jobOrder: ['status'],
+			candidate: ['status'],
+			jobSubmission: ['status'],
+			placement: ['status'],
+			clientContact: ['status'],
+			clientCorporation: ['status'],
+			opportunity: ['status'],
+		};
+		const updateFields = UPDATE_FIELDS[resource] || [];
+		for (const field of updateFields) {
+			try {
+				const value = context.getNodeParameter(field, index, undefined);
+				if (value !== undefined && value !== '' && value !== null) {
+					body[field] = value as IDataObject;
+				}
+			} catch {
+				// Field not displayed for this operation — skip
+			}
+		}
+	}
+
 	// Collect additional fields
 	const additionalFields = context.getNodeParameter('additionalFields', index, {}) as IDataObject;
 	let customFieldsRaw: string | undefined;
