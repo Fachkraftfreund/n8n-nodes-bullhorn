@@ -478,13 +478,12 @@ export async function bullhornApiRequestBinary(
 			...(query || {}),
 		},
 		encoding: 'arraybuffer',
-		returnFullResponse: true,
 		json: false,
 	};
 
 	try {
 		const response = await this.helpers.httpRequest(options);
-		return Buffer.from((response as IDataObject).body as ArrayBuffer);
+		return Buffer.from(response as ArrayBuffer);
 	} catch (error) {
 		const statusCode = (error as IDataObject).httpCode || (error as IDataObject).statusCode;
 		if (statusCode === 401 && attempt === 1) {
