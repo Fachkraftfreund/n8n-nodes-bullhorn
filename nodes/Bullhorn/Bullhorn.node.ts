@@ -10,7 +10,7 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import { bullhornApiRequest, bullhornApiRequestAllItems, getCustomFieldsMeta } from './GenericFunctions';
+import { bullhornApiRequest, bullhornApiRequestAllItems, bullhornApiRequestBinary, getCustomFieldsMeta } from './GenericFunctions';
 
 import { candidateOperations, candidateFields } from './descriptions/CandidateDescription';
 import { jobOrderOperations, jobOrderFields } from './descriptions/JobOrderDescription';
@@ -420,6 +420,48 @@ export class Bullhorn implements INodeType {
 						this, 'POST', `entity/${entityName}/${entityId}`, { isDeleted: true },
 					);
 					returnData.push({ json: response, pairedItem: { item: i } });
+
+				// ---- GET FILES (list attachments) ----
+				} else if (operation === 'getFiles') {
+					const candidateId = this.getNodeParameter('candidateFileEntityId', i) as number;
+					const response = await bullhornApiRequest.call(
+						this, 'GET', `entityFiles/${entityName}/${candidateId}`,
+					);
+					const files = (response.EntityFiles as IDataObject[]) || [];
+					if (files.length === 0) {
+						returnData.push({ json: { message: 'No files found' }, pairedItem: { item: i } });
+					} else {
+						returnData.push(
+							...files.map((file) => ({ json: file, pairedItem: { item: i } })),
+						);
+					}
+
+				// ---- GET FILE (download attachment) ----
+				} else if (operation === 'getFile') {
+					const candidateId = this.getNodeParameter('candidateFileEntityId', i) as number;
+					const fileId = this.getNodeParameter('fileId', i) as number;
+
+					// First get file metadata for the filename
+					const metaResponse = await bullhornApiRequest.call(
+						this, 'GET', `entityFiles/${entityName}/${candidateId}`,
+					);
+					const files = (metaResponse.EntityFiles as IDataObject[]) || [];
+					const fileMeta = files.find((f) => f.id === fileId);
+					const fileName = (fileMeta?.name as string) || `file_${fileId}`;
+					const contentType = (fileMeta?.contentType as string) || 'application/octet-stream';
+
+					// Download the file
+					const fileBuffer = await bullhornApiRequestBinary.call(
+						this, `file/${entityName}/${candidateId}/${fileId}`,
+					);
+
+					returnData.push({
+						json: fileMeta || { id: fileId },
+						binary: {
+							data: await this.helpers.prepareBinaryData(fileBuffer, fileName, contentType),
+						},
+						pairedItem: { item: i },
+					});
 
 				// ---- GET ALL (search / query) ----
 				} else if (operation === 'getAll') {

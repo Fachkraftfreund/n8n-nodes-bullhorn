@@ -11,6 +11,8 @@ export const candidateOperations: INodeProperties[] = [
 			{ name: 'Create', value: 'create', description: 'Create a candidate', action: 'Create a candidate' },
 			{ name: 'Delete', value: 'delete', description: 'Delete a candidate', action: 'Delete a candidate' },
 			{ name: 'Get', value: 'get', description: 'Get a candidate', action: 'Get a candidate' },
+			{ name: 'Get File', value: 'getFile', description: 'Download a file attachment (e.g. CV)', action: 'Download a candidate file' },
+			{ name: 'Get Files', value: 'getFiles', description: 'List all file attachments', action: 'List candidate files' },
 			{ name: 'Get Many', value: 'getAll', description: 'Get many candidates', action: 'Get many candidates' },
 			{ name: 'Update', value: 'update', description: 'Update a candidate', action: 'Update a candidate' },
 		],
@@ -28,6 +30,27 @@ export const candidateFields: INodeProperties[] = [
 		displayOptions: { show: { resource: ['candidate'], operation: ['get', 'update', 'delete'] } },
 		default: 0,
 		description: 'The ID of the candidate',
+	},
+
+	// ------ Get Files / Get File: candidate ID ------
+	{
+		displayName: 'Candidate ID',
+		name: 'candidateFileEntityId',
+		type: 'number',
+		required: true,
+		displayOptions: { show: { resource: ['candidate'], operation: ['getFiles', 'getFile'] } },
+		default: 0,
+		description: 'The ID of the candidate',
+	},
+	// ------ Get File: file ID ------
+	{
+		displayName: 'File ID',
+		name: 'fileId',
+		type: 'number',
+		required: true,
+		displayOptions: { show: { resource: ['candidate'], operation: ['getFile'] } },
+		default: 0,
+		description: 'The ID of the file to download (get IDs from the "Get Files" operation)',
 	},
 
 	// ------ Fields to return (get / getAll) ------

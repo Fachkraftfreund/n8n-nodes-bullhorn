@@ -441,6 +441,63 @@ export async function bullhornApiRequest(
 }
 
 // ---------------------------------------------------------------------------
+// Public API: Download file as binary (for file/entity endpoints)
+// ---------------------------------------------------------------------------
+
+export async function bullhornApiRequestBinary(
+	this: BullhornContext,
+	endpoint: string,
+	query?: IDataObject,
+	attempt = 1,
+): Promise<Buffer> {
+	let session;
+	try {
+		session = await getSession(this);
+	} catch (error) {
+		if (attempt === 1) {
+			clearSessionCache(this);
+			try {
+				session = await getSession(this);
+			} catch (retryError) {
+				throw new NodeApiError(this.getNode(), retryError as JsonObject, {
+					message: `Bullhorn authentication failed: ${(retryError as Error).message}`,
+				});
+			}
+		} else {
+			throw new NodeApiError(this.getNode(), error as JsonObject, {
+				message: `Bullhorn authentication failed: ${(error as Error).message}`,
+			});
+		}
+	}
+
+	const options: IHttpRequestOptions = {
+		method: 'GET',
+		url: `${session.restUrl}${endpoint}`,
+		qs: {
+			BhRestToken: session.bhRestToken,
+			...(query || {}),
+		},
+		encoding: 'arraybuffer',
+		returnFullResponse: true,
+		json: false,
+	};
+
+	try {
+		const response = await this.helpers.httpRequest(options);
+		return Buffer.from((response as IDataObject).body as ArrayBuffer);
+	} catch (error) {
+		const statusCode = (error as IDataObject).httpCode || (error as IDataObject).statusCode;
+		if (statusCode === 401 && attempt === 1) {
+			clearSessionCache(this);
+			return bullhornApiRequestBinary.call(this, endpoint, query, attempt + 1);
+		}
+		throw new NodeApiError(this.getNode(), error as JsonObject, {
+			message: `Bullhorn API error: ${(error as Error).message}`,
+		});
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Public API: Paginated request (fetch all items)
 // ---------------------------------------------------------------------------
 
