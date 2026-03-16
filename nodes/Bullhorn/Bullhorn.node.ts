@@ -427,7 +427,11 @@ export class Bullhorn implements INodeType {
 					const response = await bullhornApiRequest.call(
 						this, 'GET', `entityFiles/${entityName}/${candidateId}`,
 					);
-					const files = (response.EntityFiles as IDataObject[]) || [];
+					let files = (response.EntityFiles as IDataObject[]) || [];
+					const fileType = this.getNodeParameter('fileType', i, '') as string;
+					if (fileType) {
+						files = files.filter((f) => f.type === fileType);
+					}
 					if (files.length === 0) {
 						returnData.push({ json: { message: 'No files found' }, pairedItem: { item: i } });
 					} else {

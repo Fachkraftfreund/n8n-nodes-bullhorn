@@ -42,6 +42,25 @@ export const candidateFields: INodeProperties[] = [
 		default: 0,
 		description: 'The ID of the candidate',
 	},
+	// ------ Get Files: optional file type filter ------
+	{
+		displayName: 'File Type',
+		name: 'fileType',
+		type: 'options',
+		displayOptions: { show: { resource: ['candidate'], operation: ['getFiles'] } },
+		default: '',
+		description: 'Optionally filter files by type',
+		options: [
+			{ name: 'All', value: '' },
+			{ name: 'Resume', value: 'Resume' },
+			{ name: 'Cover Letter', value: 'Cover Letter' },
+			{ name: 'Portfolio', value: 'Portfolio' },
+			{ name: 'Reference', value: 'Reference' },
+			{ name: 'Right to Represent', value: 'Right to Represent' },
+			{ name: 'Other', value: 'Other' },
+		],
+	},
+
 	// ------ Get File: file ID ------
 	{
 		displayName: 'File ID',
