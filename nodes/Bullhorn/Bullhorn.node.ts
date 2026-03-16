@@ -10,7 +10,7 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import { bullhornApiRequest, bullhornApiRequestAllItems, bullhornApiRequestBinary, getCustomFieldsMeta } from './GenericFunctions';
+import { bullhornApiRequest, bullhornApiRequestAllItems, getCustomFieldsMeta } from './GenericFunctions';
 
 import { candidateOperations, candidateFields } from './descriptions/CandidateDescription';
 import { jobOrderOperations, jobOrderFields } from './descriptions/JobOrderDescription';
@@ -454,10 +454,12 @@ export class Bullhorn implements INodeType {
 					const fileName = (fileMeta?.name as string) || `file_${fileId}`;
 					const contentType = (fileMeta?.contentType as string) || 'application/octet-stream';
 
-					// Download the file
-					const fileBuffer = await bullhornApiRequestBinary.call(
-						this, `file/${entityName}/${candidateId}/${fileId}`,
+					// Download the file (Bullhorn returns JSON with base64-encoded fileContent)
+					const fileResponse = await bullhornApiRequest.call(
+						this, 'GET', `file/${entityName}/${candidateId}/${fileId}`,
 					);
+					const fileData = fileResponse.File as IDataObject;
+					const fileBuffer = Buffer.from(fileData.fileContent as string, 'base64');
 
 					returnData.push({
 						json: fileMeta || { id: fileId },
