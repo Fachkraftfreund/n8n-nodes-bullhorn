@@ -433,10 +433,10 @@ export class Bullhorn implements INodeType {
 
 					if (searchType === 'search') {
 						endpoint = `search/${entityName}`;
-						qs.query = queryString;
+						qs.query = queryString.trim() || '*';
 					} else {
 						endpoint = `query/${entityName}`;
-						qs.where = queryString;
+						qs.where = queryString.trim() || 'id > 0';
 					}
 
 					if (returnAll) {
