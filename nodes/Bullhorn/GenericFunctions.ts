@@ -520,10 +520,12 @@ export async function bullhornApiRequestAllItems(
 		const data = (response.data as IDataObject[]) || [];
 		allItems.push(...data);
 
-		const total = (response.total as number) || 0;
+		// /search returns `total`; /query does not — fall back to page-size check
+		const total = response.total as number | undefined;
 		start += pageSize;
 
-		if (data.length < pageSize || start >= total) break;
+		if (data.length < pageSize) break;
+		if (total !== undefined && start >= total) break;
 	}
 
 	return allItems;
