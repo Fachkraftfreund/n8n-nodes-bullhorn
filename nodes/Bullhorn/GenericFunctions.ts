@@ -409,35 +409,44 @@ export async function bullhornApiRequest(
 			...(query || {}),
 		},
 		json: true,
+		ignoreHttpStatusErrors: true,
+		returnFullResponse: true,
 	};
 
 	if (body && (method === 'POST' || method === 'PUT')) {
 		options.body = body as unknown as IDataObject;
 	}
 
-	try {
-		const response = await this.helpers.httpRequest(options);
-		return response as IDataObject;
-	} catch (error) {
-		const statusCode = (error as IDataObject).httpCode || (error as IDataObject).statusCode;
+	const raw = (await this.helpers.httpRequest(options)) as IDataObject;
+	const httpStatus = raw.statusCode as number;
+	const responseBody = (raw.body ?? raw) as IDataObject;
 
-		// 401: clear cache and retry
-		if (statusCode === 401 && attempt === 1) {
-			clearSessionCache(this);
-			return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
-		}
+	// Detect rate-limiting from HTTP status OR Bullhorn's errorCode in the body
+	const isRateLimited =
+		httpStatus === 429 ||
+		(responseBody.errorCode !== undefined && Number(responseBody.errorCode) === 429);
 
-		// 429: rate limited — exponential backoff (1s, 2s, 4s, … capped at 60s)
-		if (statusCode === 429 && attempt <= 7) {
-			const delay = Math.min(1000 * 2 ** (attempt - 1), 60_000);
-			await new Promise((resolve) => setTimeout(resolve, delay));
-			return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
-		}
+	// 401: clear cache and retry
+	if (httpStatus === 401 && attempt === 1) {
+		clearSessionCache(this);
+		return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
+	}
 
-		throw new NodeApiError(this.getNode(), error as JsonObject, {
-			message: `Bullhorn API error: ${(error as Error).message}`,
+	// 429: rate limited — exponential backoff (1s, 2s, 4s, … capped at 60s)
+	if (isRateLimited && attempt <= 7) {
+		const delay = Math.min(1000 * 2 ** (attempt - 1), 60_000);
+		await new Promise((resolve) => setTimeout(resolve, delay));
+		return bullhornApiRequest.call(this, method, endpoint, body, query, attempt + 1);
+	}
+
+	if (httpStatus >= 400) {
+		const detail = typeof responseBody === 'string' ? responseBody : JSON.stringify(responseBody);
+		throw new NodeApiError(this.getNode(), responseBody as JsonObject, {
+			message: `Bullhorn API error (HTTP ${httpStatus}): ${(responseBody.errorMessage as string) || detail}`,
 		});
 	}
+
+	return responseBody;
 }
 
 // ---------------------------------------------------------------------------
