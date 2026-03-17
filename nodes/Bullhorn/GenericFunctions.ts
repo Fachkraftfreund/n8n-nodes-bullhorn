@@ -531,10 +531,15 @@ export async function bullhornApiRequestAllItems(
 
 		// /search returns `total`; /query does not — fall back to page-size check
 		const total = response.total as number | undefined;
-		start += pageSize;
+		start += data.length;
 
-		if (data.length < pageSize) break;
-		if (total !== undefined && start >= total) break;
+		if (total !== undefined) {
+			// Prefer the authoritative total when available (/search)
+			if (start >= total) break;
+		} else {
+			// Fallback for /query which has no total field
+			if (data.length < pageSize) break;
+		}
 	}
 
 	return allItems;
