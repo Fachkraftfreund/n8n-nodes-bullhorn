@@ -144,13 +144,13 @@ function buildBody(
 	// (e.g. status is a required create field that is also editable during updates)
 	if (!includeRequired) {
 		const UPDATE_FIELDS: Record<string, string[]> = {
-			jobOrder: ['status'],
+			jobOrder: ['title', 'status'],
 			candidate: ['status'],
 			jobSubmission: ['status'],
 			placement: ['status'],
 			clientContact: ['status'],
 			clientCorporation: ['status'],
-			opportunity: ['status'],
+			opportunity: ['title', 'status'],
 		};
 		const updateFields = UPDATE_FIELDS[resource] || [];
 		for (const field of updateFields) {
