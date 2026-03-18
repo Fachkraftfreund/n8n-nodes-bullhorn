@@ -401,8 +401,8 @@ export class Bullhorn implements INodeType {
 						// even on soft-deleted records. Query for a deleted record matching the key
 						// fields and restore+update it rather than creating a new one.
 						const whereParts = restoreKey.map((field) => {
-							const ref = body[field] as IDataObject;
-							return `${field}.id=${ref.id}`;
+							const value = this.getNodeParameter(field, i) as number;
+							return `${field}.id=${value}`;
 						});
 						whereParts.push('isDeleted=true');
 						const existing = await bullhornApiRequest.call(
