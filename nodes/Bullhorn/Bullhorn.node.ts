@@ -397,26 +397,28 @@ export class Bullhorn implements INodeType {
 					const restoreKey = RESTORE_ON_CONFLICT[resource];
 
 					if (restoreKey) {
-						// Some entities have a unique association constraint that Bullhorn enforces
-						// even on soft-deleted records. Query for a deleted record matching the key
-						// fields and restore+update it rather than creating a new one.
+						// Some entities enforce a unique association constraint (even across soft-deleted
+						// records). Query for any existing record — deleted or active — with the same key
+						// fields. If found, update it (restoring if deleted) rather than creating a new one.
 						const whereParts = restoreKey.map((field) => {
 							const value = this.getNodeParameter(field, i) as number;
 							return `${field}.id=${value}`;
 						});
-						whereParts.push('isDeleted=true');
 						const existing = await bullhornApiRequest.call(
 							this, 'GET', `query/${entityName}`, undefined,
-							{ where: whereParts.join(' AND '), fields: 'id', count: 1 },
+							{ where: whereParts.join(' AND '), fields: 'id,isDeleted', count: 1 },
 						);
 						const existingRecords = (existing.data as IDataObject[]) || [];
 						if (existingRecords.length > 0) {
-							const existingId = (existingRecords[0] as IDataObject).id as number;
+							const existingRecord = existingRecords[0] as IDataObject;
+							const existingId = existingRecord.id as number;
 							// Association fields are immutable on update — strip them from the body
-							const restoreBody: IDataObject = { ...body, isDeleted: false };
-							for (const field of restoreKey) delete restoreBody[field];
+							const updateBody: IDataObject = { ...body };
+							for (const field of restoreKey) delete updateBody[field];
+							// If the record was soft-deleted, restore it
+							if (existingRecord.isDeleted === true) updateBody['isDeleted'] = false;
 							const response = await bullhornApiRequest.call(
-								this, 'POST', `entity/${entityName}/${existingId}`, restoreBody,
+								this, 'POST', `entity/${entityName}/${existingId}`, updateBody,
 							);
 							returnData.push({ json: response, pairedItem: { item: i } });
 						} else {
