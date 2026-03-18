@@ -150,7 +150,7 @@ function buildBody(
 			placement: ['status'],
 			clientContact: ['status'],
 			clientCorporation: ['status'],
-			opportunity: ['title', 'status'],
+			opportunity: ['status'],
 		};
 		const updateFields = UPDATE_FIELDS[resource] || [];
 		for (const field of updateFields) {
