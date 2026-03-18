@@ -55,6 +55,15 @@ const REQUIRED_CREATE_FIELDS: Record<string, string[]> = {
 	task: ['subject'],
 };
 
+// Entities where Bullhorn enforces a unique association constraint even on soft-deleted records.
+// Attempting to create when a deleted record exists for the same key fields returns
+// IMPROPERLY_STRUCTURED_ASSOCIATION (HTTP 500). The fix is to restore+update the deleted record.
+// Key = n8n resource name → association fields that form the unique key.
+const RESTORE_ON_CONFLICT: Record<string, string[]> = {
+	jobSubmission: ['candidate', 'jobOrder'],
+	placement: ['candidate', 'jobOrder'],
+};
+
 // Fields that reference other entities and must be sent as { id: value }
 const ENTITY_REF_FIELDS = new Set([
 	'clientCorporation', 'clientContact', 'candidate', 'jobOrder', 'jobSubmission',
@@ -385,11 +394,44 @@ export class Bullhorn implements INodeType {
 				// ---- CREATE ----
 				if (operation === 'create') {
 					const body = buildBody(this, resource, i, true);
-					// Bullhorn uses PUT for entity creation
-					const response = await bullhornApiRequest.call(
-						this, 'PUT', `entity/${entityName}`, body,
-					);
-					returnData.push({ json: response, pairedItem: { item: i } });
+					const restoreKey = RESTORE_ON_CONFLICT[resource];
+
+					if (restoreKey) {
+						// Some entities have a unique association constraint that Bullhorn enforces
+						// even on soft-deleted records. Query for a deleted record matching the key
+						// fields and restore+update it rather than creating a new one.
+						const whereParts = restoreKey.map((field) => {
+							const ref = body[field] as IDataObject;
+							return `${field}.id=${ref.id}`;
+						});
+						whereParts.push('isDeleted=true');
+						const existing = await bullhornApiRequest.call(
+							this, 'GET', `query/${entityName}`, undefined,
+							{ where: whereParts.join(' AND '), fields: 'id', count: 1 },
+						);
+						const existingRecords = (existing.data as IDataObject[]) || [];
+						if (existingRecords.length > 0) {
+							const existingId = (existingRecords[0] as IDataObject).id as number;
+							// Association fields are immutable on update — strip them from the body
+							const restoreBody: IDataObject = { ...body, isDeleted: false };
+							for (const field of restoreKey) delete restoreBody[field];
+							const response = await bullhornApiRequest.call(
+								this, 'POST', `entity/${entityName}/${existingId}`, restoreBody,
+							);
+							returnData.push({ json: response, pairedItem: { item: i } });
+						} else {
+							const response = await bullhornApiRequest.call(
+								this, 'PUT', `entity/${entityName}`, body,
+							);
+							returnData.push({ json: response, pairedItem: { item: i } });
+						}
+					} else {
+						// Bullhorn uses PUT for entity creation
+						const response = await bullhornApiRequest.call(
+							this, 'PUT', `entity/${entityName}`, body,
+						);
+						returnData.push({ json: response, pairedItem: { item: i } });
+					}
 
 				// ---- GET ----
 				} else if (operation === 'get') {
