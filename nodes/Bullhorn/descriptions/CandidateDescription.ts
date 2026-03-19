@@ -1,4 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
+import { COUNTRY_OPTIONS } from './CountryOptions';
 
 export const candidateOperations: INodeProperties[] = [
 	{
@@ -134,6 +135,7 @@ export const candidateFields: INodeProperties[] = [
 			{ displayName: 'City', name: 'city', type: 'string', default: '' },
 			{ displayName: 'State', name: 'state', type: 'string', default: '' },
 			{ displayName: 'Zip', name: 'zip', type: 'string', default: '' },
+			{ displayName: 'Country', name: 'countryID', type: 'options', default: 2249, options: COUNTRY_OPTIONS, description: 'Bullhorn country ID for the address. Defaults to US if not set.' },
 			{ displayName: 'Occupation', name: 'occupation', type: 'string', default: '', description: 'Current occupation or job title' },
 			{ displayName: 'Source', name: 'source', type: 'string', default: '', description: 'Candidate source' },
 			{ displayName: 'Category ID', name: 'category', type: 'number', default: 0 },

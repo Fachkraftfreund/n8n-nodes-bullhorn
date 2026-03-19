@@ -397,35 +397,55 @@ export class Bullhorn implements INodeType {
 					const restoreKey = RESTORE_ON_CONFLICT[resource];
 
 					if (restoreKey) {
-						// Some entities enforce a unique association constraint (even across soft-deleted
-						// records). Query for any existing record — deleted or active — with the same key
-						// fields. If found, update it (restoring if deleted) rather than creating a new one.
+						// Some entities enforce a unique association constraint even on soft-deleted records.
+						// Strategy: check for an ACTIVE record first (safe to update), then a DELETED one
+						// (safe to restore), then fall back to creating. Never try to restore a deleted
+						// record when an active one also exists — that triggers IMPROPERLY_STRUCTURED_ASSOCIATION.
 						const whereParts = restoreKey.map((field) => {
 							const value = this.getNodeParameter(field, i) as number;
 							return `${field}.id=${value}`;
 						});
-						const existing = await bullhornApiRequest.call(
+
+						// Step 1: look for an active (non-deleted) record
+						const activeResult = await bullhornApiRequest.call(
 							this, 'GET', `query/${entityName}`, undefined,
-							{ where: whereParts.join(' AND '), fields: 'id,isDeleted', count: 1 },
+							{ where: [...whereParts, 'isDeleted=false'].join(' AND '), fields: 'id', count: 1 },
 						);
-						const existingRecords = (existing.data as IDataObject[]) || [];
-						if (existingRecords.length > 0) {
-							const existingRecord = existingRecords[0] as IDataObject;
-							const existingId = existingRecord.id as number;
-							// Association fields are immutable on update — strip them from the body
+						const activeRecords = (activeResult.data as IDataObject[]) || [];
+
+						if (activeRecords.length > 0) {
+							// Update the existing active record
+							const existingId = (activeRecords[0] as IDataObject).id as number;
 							const updateBody: IDataObject = { ...body };
 							for (const field of restoreKey) delete updateBody[field];
-							// If the record was soft-deleted, restore it
-							if (existingRecord.isDeleted === true) updateBody['isDeleted'] = false;
 							const response = await bullhornApiRequest.call(
 								this, 'POST', `entity/${entityName}/${existingId}`, updateBody,
 							);
 							returnData.push({ json: response, pairedItem: { item: i } });
 						} else {
-							const response = await bullhornApiRequest.call(
-								this, 'PUT', `entity/${entityName}`, body,
+							// Step 2: look for a deleted record to restore
+							const deletedResult = await bullhornApiRequest.call(
+								this, 'GET', `query/${entityName}`, undefined,
+								{ where: [...whereParts, 'isDeleted=true'].join(' AND '), fields: 'id', count: 1 },
 							);
-							returnData.push({ json: response, pairedItem: { item: i } });
+							const deletedRecords = (deletedResult.data as IDataObject[]) || [];
+
+							if (deletedRecords.length > 0) {
+								// Restore and update the deleted record
+								const existingId = (deletedRecords[0] as IDataObject).id as number;
+								const restoreBody: IDataObject = { ...body, isDeleted: false };
+								for (const field of restoreKey) delete restoreBody[field];
+								const response = await bullhornApiRequest.call(
+									this, 'POST', `entity/${entityName}/${existingId}`, restoreBody,
+								);
+								returnData.push({ json: response, pairedItem: { item: i } });
+							} else {
+								// No existing record — create new
+								const response = await bullhornApiRequest.call(
+									this, 'PUT', `entity/${entityName}`, body,
+								);
+								returnData.push({ json: response, pairedItem: { item: i } });
+							}
 						}
 					} else {
 						// Bullhorn uses PUT for entity creation

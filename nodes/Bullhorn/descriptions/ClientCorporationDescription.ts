@@ -1,4 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
+import { COUNTRY_OPTIONS } from './CountryOptions';
 
 export const clientCorporationOperations: INodeProperties[] = [
 	{
@@ -74,6 +75,7 @@ export const clientCorporationFields: INodeProperties[] = [
 			{ displayName: 'City', name: 'city', type: 'string', default: '' },
 			{ displayName: 'State', name: 'state', type: 'string', default: '' },
 			{ displayName: 'Zip', name: 'zip', type: 'string', default: '' },
+			{ displayName: 'Country', name: 'countryID', type: 'options', default: 2249, options: COUNTRY_OPTIONS, description: 'Bullhorn country ID for the address. Defaults to US if not set.' },
 			{ displayName: 'Notes', name: 'notes', type: 'string', default: '' },
 			{ displayName: 'Owner ID', name: 'owner', type: 'number', default: 0 },
 			{ displayName: 'Custom Fields (JSON)', name: 'customFields', type: 'json', default: '{}' },
