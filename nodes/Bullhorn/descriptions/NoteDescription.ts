@@ -75,20 +75,8 @@ export const noteFields: INodeProperties[] = [
 	{
 		displayName: 'Search Type',
 		name: 'searchType',
-		type: 'options',
+		type: 'hidden',
 		displayOptions: { show: { resource: ['note'], operation: ['getAll'] } },
-		options: [
-			{
-				name: 'Lucene (Full-Text Search)',
-				value: 'search',
-				description: 'Search indexed fields using Lucene syntax (e.g. comments:test)',
-			},
-			{
-				name: 'SQL Query (Filter by Any Field)',
-				value: 'query',
-				description: 'Filter by any field using SQL-style WHERE clause (e.g. personReference.id=6055)',
-			},
-		],
 		default: 'search',
 	},
 	{
@@ -96,18 +84,9 @@ export const noteFields: INodeProperties[] = [
 		name: 'queryString',
 		type: 'string',
 		required: true,
-		displayOptions: { show: { resource: ['note'], operation: ['getAll'], searchType: ['search'] } },
-		default: 'isDeleted:0',
-		description: 'Lucene query syntax (e.g. "action:\\"Phone Call\\"" or "comments:test")',
-	},
-	{
-		displayName: 'Where Clause (SQL)',
-		name: 'queryString',
-		type: 'string',
-		required: true,
-		displayOptions: { show: { resource: ['note'], operation: ['getAll'], searchType: ['query'] } },
-		default: 'isDeleted=false',
-		description: 'SQL-style WHERE clause (e.g. "personReference.id=6055" or "personReference.id=6055 AND isDeleted=false")',
+		displayOptions: { show: { resource: ['note'], operation: ['getAll'] } },
+		default: 'isDeleted:false',
+		description: 'Lucene query syntax (e.g. "action:\"Phone Call\"")',
 	},
 	{
 		displayName: 'Return All',
